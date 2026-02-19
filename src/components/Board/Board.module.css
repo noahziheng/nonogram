@@ -1,0 +1,11 @@
+.board {
+  display: grid;
+  gap: 0;
+  width: fit-content;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  border: var(--glass-border);
+  touch-action: none;
+}
