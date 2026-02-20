@@ -34,7 +34,7 @@ export default function App() {
   const { theme, toggleTheme } = useTheme();
   const {
     state, fillCell, markX, clearError, setInputMode,
-    setHover, clearHover, tick, newGame, reset,
+    tick, newGame, reset,
   } = useGame(defaultPuzzle);
 
   useTimer(state.started, state.won || state.lost, tick);
@@ -65,7 +65,7 @@ export default function App() {
     <GameContext.Provider
       value={{
         state, fillCell, markX, clearError, setInputMode,
-        setHover, clearHover, newGame, reset,
+        newGame, reset,
       }}
     >
       <div className={styles.app}>

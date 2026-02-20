@@ -117,8 +117,12 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Smooth global transitions for theme switch */
-*:not(.cell) {
+/* Theme switch transitions — applied only to elements that benefit from it.
+   Do NOT use `*` selector here: it forces a full style recalc on every hover/state change,
+   which is catastrophic for performance on 15×15 boards (225 cells × 2+ passes). */
+body,
+button,
+a {
   transition-property: background-color, border-color, color, box-shadow;
   transition-duration: 0.3s;
   transition-timing-function: ease;

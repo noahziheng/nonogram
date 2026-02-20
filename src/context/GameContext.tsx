@@ -7,8 +7,6 @@ interface GameContextValue {
   markX: (row: number, col: number) => void;
   clearError: (row: number, col: number) => void;
   setInputMode: (mode: InputMode) => void;
-  setHover: (row: number | null, col: number | null) => void;
-  clearHover: () => void;
   newGame: (puzzle: PuzzleDefinition) => void;
   reset: () => void;
 }

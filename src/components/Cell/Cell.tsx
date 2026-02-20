@@ -1,6 +1,5 @@
 import { memo, useEffect } from 'react';
 import { CellState } from '../../types';
-import { useGameContext } from '../../context/GameContext';
 import styles from './Cell.module.css';
 
 interface CellProps {
@@ -8,10 +7,10 @@ interface CellProps {
   col: number;
   value: CellState;
   size: number;
-  highlighted: boolean;
   hasError: boolean;
   onCellDown: (row: number, col: number, button: number) => void;
   onCellEnter: (row: number, col: number) => void;
+  onClearError: (row: number, col: number) => void;
 }
 
 export const Cell = memo(function Cell({
@@ -19,24 +18,21 @@ export const Cell = memo(function Cell({
   col,
   value,
   size,
-  highlighted,
   hasError,
   onCellDown,
   onCellEnter,
+  onClearError,
 }: CellProps) {
-  const { clearError } = useGameContext();
-
   useEffect(() => {
     if (!hasError) return;
-    const id = setTimeout(() => clearError(row, col), 600);
+    const id = setTimeout(() => onClearError(row, col), 600);
     return () => clearTimeout(id);
-  }, [hasError, row, col, clearError]);
+  }, [hasError, row, col, onClearError]);
 
   const className = [
     styles.cell,
     value === CellState.Filled && styles.filled,
     value === CellState.MarkedX && styles.markedX,
-    highlighted && styles.highlighted,
     hasError && styles.error,
     col % 5 === 0 && styles.thickLeft,
     row % 5 === 0 && styles.thickTop,

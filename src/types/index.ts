@@ -21,8 +21,6 @@ export interface GameState {
   board: CellState[][];
   rowClues: number[][];
   colClues: number[][];
-  hoverRow: number | null;
-  hoverCol: number | null;
   timeLimit: number; // total seconds allowed
   remaining: number; // seconds left
   started: boolean;
@@ -41,8 +39,6 @@ export type DragAction = 'fill' | 'unfill' | 'markX' | 'unmarkX';
 export type GameAction =
   | { type: 'FILL_CELL'; row: number; col: number }
   | { type: 'MARK_X'; row: number; col: number }
-  | { type: 'SET_HOVER'; row: number | null; col: number | null }
-  | { type: 'CLEAR_HOVER' }
   | { type: 'TICK' }
   | { type: 'NEW_GAME'; puzzle: PuzzleDefinition }
   | { type: 'RESET' }

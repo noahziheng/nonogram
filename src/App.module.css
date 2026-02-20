@@ -87,11 +87,12 @@
 }
 
 .boardWrapper {
-  overflow: auto;
+  width: 100%;
   max-width: 100%;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   animation: boardIn 0.4s ease-out 0.15s both;
+  overflow: hidden;
 }
 
 .boardFooter {

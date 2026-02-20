@@ -6,7 +6,13 @@ export function useTimer(
   onTick: () => void,
 ) {
   const tickRef = useRef(onTick);
-  tickRef.current = onTick;
+
+  // Update the ref inside an effect to comply with the rules of refs.
+  // This ensures the interval always calls the latest onTick without
+  // needing to recreate the interval on every render.
+  useEffect(() => {
+    tickRef.current = onTick;
+  });
 
   useEffect(() => {
     if (!started || stopped) return;

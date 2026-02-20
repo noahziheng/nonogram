@@ -49,8 +49,6 @@ function createInitialState(puzzle: PuzzleDefinition): GameState {
     ),
     rowClues: computeRowClues(puzzle.solution),
     colClues: computeColClues(puzzle.solution),
-    hoverRow: null,
-    hoverCol: null,
     timeLimit: limit,
     remaining: limit,
     started: false,
@@ -163,10 +161,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
     case 'SET_INPUT_MODE':
       return { ...state, inputMode: action.mode };
-    case 'SET_HOVER':
-      return { ...state, hoverRow: action.row, hoverCol: action.col };
-    case 'CLEAR_HOVER':
-      return { ...state, hoverRow: null, hoverCol: null };
     case 'TICK': {
       if (!state.started || state.won || state.lost) return state;
       const newRemaining = state.remaining - 1;
@@ -207,11 +201,6 @@ export function useGame(initialPuzzle: PuzzleDefinition) {
     (mode: InputMode) => dispatch({ type: 'SET_INPUT_MODE', mode }),
     [],
   );
-  const setHover = useCallback(
-    (row: number | null, col: number | null) => dispatch({ type: 'SET_HOVER', row, col }),
-    [],
-  );
-  const clearHover = useCallback(() => dispatch({ type: 'CLEAR_HOVER' }), []);
   const tick = useCallback(() => dispatch({ type: 'TICK' }), []);
   const newGame = useCallback(
     (puzzle: PuzzleDefinition) => dispatch({ type: 'NEW_GAME', puzzle }),
@@ -221,6 +210,6 @@ export function useGame(initialPuzzle: PuzzleDefinition) {
 
   return {
     state, fillCell, markX, clearError, setInputMode,
-    setHover, clearHover, tick, newGame, reset,
+    tick, newGame, reset,
   };
 }
