@@ -48,6 +48,7 @@
   display: flex;
   gap: 12px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .retryBtn,
@@ -106,7 +107,8 @@
 
   .retryBtn,
   .newBtn {
-    padding: 10px 20px;
+    padding: 12px 20px;
+    min-height: 44px;
     font-size: 13px;
   }
 }

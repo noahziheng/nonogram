@@ -119,7 +119,7 @@ export default function App() {
             </button>
           </div>
           <p className={styles.hint}>
-            左键填充 · 右键标 ✕ · 可拖拽
+            点击填充 · 切换模式标记 ✕ · 可滑动
           </p>
         </div>
         <HelpGuide forceOpen={helpOpen} onClose={() => setHelpOpen(false)} />

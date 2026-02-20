@@ -33,7 +33,8 @@
 .sizeBtn,
 .puzzleBtn,
 .randomBtn {
-  padding: 6px 16px;
+  padding: 8px 16px;
+  min-height: 44px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   background: var(--bg-tertiary);
@@ -85,7 +86,8 @@
   .sizeBtn,
   .puzzleBtn,
   .randomBtn {
-    padding: 5px 12px;
+    min-height: 44px;
+    padding: 8px 12px;
     font-size: 12px;
   }
 

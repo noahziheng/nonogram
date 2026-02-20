@@ -8,7 +8,7 @@ import { ClueRow } from '../ClueRow/ClueRow';
 import styles from './Board.module.css';
 
 const BASE_CELL = 30;
-const MIN_CELL = 18;
+const MIN_CELL = 24;
 const CLUE_CHAR_W = 20;
 const CLUE_PAD = 12;
 const OUTER_PAD = 24; // total horizontal padding around board
@@ -35,13 +35,15 @@ export function Board() {
   }, []);
 
   const cellSize = useMemo(() => {
-    const clueWidth = maxRowClueLen * CLUE_CHAR_W + CLUE_PAD;
-    const available = winWidth - OUTER_PAD - clueWidth;
+    const outerPad = winWidth < 480 ? 16 : OUTER_PAD;
+    const clueCharW = CLUE_CHAR_W;
+    const clueWidth = maxRowClueLen * clueCharW + CLUE_PAD;
+    const available = winWidth - outerPad - clueWidth;
     const fit = Math.floor(available / cols);
     return Math.max(MIN_CELL, Math.min(BASE_CELL, fit));
   }, [winWidth, cols, maxRowClueLen]);
 
-  const clueCharW = cellSize < 24 ? 16 : CLUE_CHAR_W;
+  const clueCharW = cellSize < 24 ? 14 : CLUE_CHAR_W;
   const cluePad = cellSize < 24 ? 8 : CLUE_PAD;
 
   const dragging = useRef(false);
@@ -223,6 +225,7 @@ export function Board() {
       style={{
         gridTemplateColumns: `${maxRowClueLen * clueCharW + cluePad}px repeat(${cols}, ${cellSize}px)`,
         gridTemplateRows: `${maxColClueLen * clueCharW + cluePad}px repeat(${rows}, ${cellSize}px)`,
+        overscrollBehavior: 'contain',
       }}
       onContextMenu={(e) => e.preventDefault()}
       onMouseLeave={clearHover}
