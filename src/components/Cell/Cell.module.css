@@ -10,6 +10,8 @@
   box-shadow: var(--shadow-cell);
   /* Cell needs its own fast transition, not the global one */
   transition: background-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+  /* 性能优化：限制重绘范围到单个 cell */
+  contain: layout style paint;
 }
 
 .cell:hover {

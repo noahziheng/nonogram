@@ -2,6 +2,8 @@
   width: 100%;
   display: flex;
   justify-content: center;
+  /* 限制重绘范围 */
+  contain: layout style;
 }
 
 .board {
@@ -14,4 +16,16 @@
   box-shadow: var(--shadow-xl);
   border: var(--glass-border);
   touch-action: none;
+  /* 性能优化：限制重绘和布局计算范围 */
+  contain: layout style paint;
+  /* 提示浏览器优化 transform */
+  will-change: transform;
+}
+
+/* 移动端优化 */
+@media (max-width: 600px) {
+  .board {
+    /* 移动端禁用 will-change 以节省内存 */
+    will-change: auto;
+  }
 }

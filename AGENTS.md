@@ -73,3 +73,28 @@ Add to `src/data/presets.ts`. Each puzzle needs:
 }
 ```
 Ensure no completely empty rows or columns in the solution.
+
+## Git Commit Convention
+
+Use **Conventional Commits** format with single-line English messages:
+
+```
+<type>(<scope>): <description>
+```
+
+**Types:**
+- `feat` — New feature
+- `fix` — Bug fix
+- `perf` — Performance improvement
+- `refactor` — Code refactoring (no feature/fix)
+- `style` — Code style changes (formatting, etc.)
+- `docs` — Documentation only
+- `chore` — Build, tooling, dependencies
+
+**Examples:**
+```
+feat(board): add drag-to-fill interaction
+fix(timer): prevent negative time display
+perf(cell): use event delegation for touch events
+refactor(hooks): extract puzzle generation logic
+```

@@ -8,19 +8,19 @@ interface CellProps {
   value: CellState;
   size: number;
   hasError: boolean;
-  onCellDown: (row: number, col: number, button: number) => void;
-  onCellEnter: (row: number, col: number) => void;
   onClearError: (row: number, col: number) => void;
 }
 
+/**
+ * Cell 组件 - 纯展示组件
+ * 事件处理已移至 Board 层级通过事件委托实现，提升移动端性能
+ */
 export const Cell = memo(function Cell({
   row,
   col,
   value,
   size,
   hasError,
-  onCellDown,
-  onCellEnter,
   onClearError,
 }: CellProps) {
   useEffect(() => {
@@ -46,11 +46,6 @@ export const Cell = memo(function Cell({
       data-row={row}
       data-col={col}
       style={{ width: size, height: size, fontSize: size < 24 ? 10 : 12 }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onCellDown(row, col, e.button);
-      }}
-      onMouseEnter={() => onCellEnter(row, col)}
     >
       {value === CellState.MarkedX && '\u2715'}
     </div>

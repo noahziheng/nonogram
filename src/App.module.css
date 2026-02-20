@@ -164,6 +164,8 @@
   .app {
     padding: 16px 10px 32px;
     gap: 12px;
+    /* 移动端禁用入场动画以提升性能 */
+    animation: none;
   }
 
   .title {
@@ -185,6 +187,19 @@
 
   .hint {
     font-size: 12px;
+  }
+
+  .boardWrapper {
+    /* 移动端禁用入场动画 */
+    animation: none;
+  }
+}
+
+/* 尊重用户的减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .app,
+  .boardWrapper {
+    animation: none;
   }
 }
 

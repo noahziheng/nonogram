@@ -14,6 +14,21 @@ const MIN_CELL = 24;
 const CLUE_CHAR_W = 20;
 const CLUE_PAD = 12;
 
+/**
+ * 从事件目标元素中提取 row/col 坐标
+ * 支持事件委托模式
+ */
+function getCellCoords(target: EventTarget | null): { row: number; col: number } | null {
+  if (!(target instanceof HTMLElement)) return null;
+  // 向上查找最近的带有 data-row 和 data-col 的元素
+  const cell = target.closest('[data-row][data-col]');
+  if (!cell) return null;
+  const row = cell.getAttribute('data-row');
+  const col = cell.getAttribute('data-col');
+  if (row === null || col === null) return null;
+  return { row: Number(row), col: Number(col) };
+}
+
 export function Board() {
   const { state, fillCell, markX, clearError } = useGameContext();
   const { board, rowClues, colClues, inputMode } = state;
@@ -29,26 +44,41 @@ export function Board() {
   const [availableWidth, setAvailableWidth] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth - 40 : 760,
   );
+  const [availableHeight, setAvailableHeight] = useState(() =>
+    typeof window !== 'undefined' ? window.innerHeight - 200 : 600,
+  );
 
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width;
-      if (w && w > 0) setAvailableWidth(w);
+      const rect = entries[0]?.contentRect;
+      if (rect) {
+        if (rect.width > 0) setAvailableWidth(rect.width);
+        // 估算可用高度：视口高度减去其他 UI 元素
+        const viewportHeight = window.innerHeight;
+        const estimatedOtherUI = 200; // header + toolbar + footer 等
+        setAvailableHeight(Math.max(300, viewportHeight - estimatedOtherUI));
+      }
     });
     ro.observe(el);
     // Measure immediately on mount
-    const w = el.getBoundingClientRect().width;
-    if (w > 0) setAvailableWidth(w);
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0) setAvailableWidth(rect.width);
     return () => ro.disconnect();
   }, []);
 
   const cellSize = useMemo(() => {
-    const clueWidth = maxRowClueLen * CLUE_CHAR_W + CLUE_PAD;
-    const fit = Math.floor((availableWidth - clueWidth) / cols);
+    const clueWidthPx = maxRowClueLen * CLUE_CHAR_W + CLUE_PAD;
+    const clueHeightPx = maxColClueLen * CLUE_CHAR_W + CLUE_PAD;
+    
+    // 同时考虑宽度和高度限制
+    const fitWidth = Math.floor((availableWidth - clueWidthPx) / cols);
+    const fitHeight = Math.floor((availableHeight - clueHeightPx) / rows);
+    
+    const fit = Math.min(fitWidth, fitHeight);
     return Math.max(MIN_CELL, Math.min(BASE_CELL, fit));
-  }, [availableWidth, cols, maxRowClueLen]);
+  }, [availableWidth, availableHeight, cols, rows, maxRowClueLen, maxColClueLen]);
 
   const clueCharW = cellSize < 24 ? 14 : CLUE_CHAR_W;
   const cluePad = cellSize < 24 ? 8 : CLUE_PAD;
@@ -56,52 +86,82 @@ export function Board() {
   // ── Hover: zero-React-render approach via direct DOM classList manipulation ──
   // We never call setState/dispatch for hover; instead we directly add/remove CSS
   // classes on the relevant Cell and ClueRow DOM elements. This means touchmove
-  // at 60fps costs almost nothing — just a querySelectorAll + classList toggle.
+  // at 60fps costs almost nothing.
 
   const hoverRef = useRef<{ row: number | null; col: number | null }>({ row: null, col: null });
+  
+  // 缓存 DOM 元素引用，避免重复 querySelectorAll
+  const cellDOMCache = useRef<Map<string, HTMLElement>>(new Map());
+  const clueDOMCache = useRef<Map<string, HTMLElement>>(new Map());
+
+  // 当棋盘尺寸变化时清空缓存
+  useEffect(() => {
+    cellDOMCache.current.clear();
+    clueDOMCache.current.clear();
+    hoverRef.current = { row: null, col: null };
+  }, [rows, cols, state.puzzle]);
+
+  // 构建 DOM 缓存（延迟初始化）
+  const ensureDOMCache = useCallback(() => {
+    const board = boardRef.current;
+    if (!board || cellDOMCache.current.size > 0) return;
+    
+    // 一次性查询所有 cell 和 clue 元素
+    board.querySelectorAll<HTMLElement>('[data-row][data-col]').forEach((el) => {
+      const r = el.getAttribute('data-row');
+      const c = el.getAttribute('data-col');
+      if (r !== null && c !== null) {
+        cellDOMCache.current.set(`${r},${c}`, el);
+      }
+    });
+    board.querySelectorAll<HTMLElement>('[data-clue-row]').forEach((el) => {
+      const r = el.getAttribute('data-clue-row');
+      if (r !== null) clueDOMCache.current.set(`clue-row-${r}`, el);
+    });
+    board.querySelectorAll<HTMLElement>('[data-clue-col]').forEach((el) => {
+      const c = el.getAttribute('data-clue-col');
+      if (c !== null) clueDOMCache.current.set(`clue-col-${c}`, el);
+    });
+  }, []);
 
   const applyHoverDOM = useCallback((row: number | null, col: number | null) => {
-    const board = boardRef.current;
-    if (!board) return;
-
+    ensureDOMCache();
     const prev = hoverRef.current;
 
-    // Clear previous highlighted cells
-    if (prev.row !== null) {
-      board.querySelectorAll<HTMLElement>(`[data-row="${prev.row}"]`).forEach((el) => {
-        el.classList.remove(cellStyles.highlighted);
-      });
-      board.querySelectorAll<HTMLElement>(`[data-clue-row="${prev.row}"]`).forEach((el) => {
-        el.classList.remove(clueStyles.highlighted);
-      });
-    }
-    if (prev.col !== null) {
-      board.querySelectorAll<HTMLElement>(`[data-col="${prev.col}"]`).forEach((el) => {
-        el.classList.remove(cellStyles.highlighted);
-      });
-      board.querySelectorAll<HTMLElement>(`[data-clue-col="${prev.col}"]`).forEach((el) => {
-        el.classList.remove(clueStyles.highlighted);
-      });
+    // 使用缓存的 DOM 引用进行操作
+    const toggleHighlight = (r: number | null, c: number | null, add: boolean) => {
+      if (r !== null) {
+        // 高亮整行
+        for (let i = 0; i < cols; i++) {
+          const el = cellDOMCache.current.get(`${r},${i}`);
+          if (el) el.classList.toggle(cellStyles.highlighted, add);
+        }
+        const clueEl = clueDOMCache.current.get(`clue-row-${r}`);
+        if (clueEl) clueEl.classList.toggle(clueStyles.highlighted, add);
+      }
+      if (c !== null) {
+        // 高亮整列
+        for (let i = 0; i < rows; i++) {
+          const el = cellDOMCache.current.get(`${i},${c}`);
+          if (el) el.classList.toggle(cellStyles.highlighted, add);
+        }
+        const clueEl = clueDOMCache.current.get(`clue-col-${c}`);
+        if (clueEl) clueEl.classList.toggle(clueStyles.highlighted, add);
+      }
+    };
+
+    // 清除之前的高亮
+    if (prev.row !== row || prev.col !== col) {
+      toggleHighlight(prev.row, prev.col, false);
     }
 
     hoverRef.current = { row, col };
 
-    // Apply new highlighted cells
-    if (row !== null) {
-      board.querySelectorAll<HTMLElement>(`[data-row="${row}"]`).forEach((el) => {
-        el.classList.add(cellStyles.highlighted);
-      });
-      const clueEl = board.querySelector<HTMLElement>(`[data-clue-row="${row}"]`);
-      if (clueEl) clueEl.classList.add(clueStyles.highlighted);
+    // 应用新的高亮
+    if (row !== null || col !== null) {
+      toggleHighlight(row, col, true);
     }
-    if (col !== null) {
-      board.querySelectorAll<HTMLElement>(`[data-col="${col}"]`).forEach((el) => {
-        el.classList.add(cellStyles.highlighted);
-      });
-      const clueEl = board.querySelector<HTMLElement>(`[data-clue-col="${col}"]`);
-      if (clueEl) clueEl.classList.add(clueStyles.highlighted);
-    }
-  }, []);
+  }, [ensureDOMCache, rows, cols]);
 
   const setHoverDirect = useCallback((row: number | null, col: number | null) => {
     const prev = hoverRef.current;
@@ -112,11 +172,6 @@ export function Board() {
   const clearHoverDirect = useCallback(() => {
     applyHoverDOM(null, null);
   }, [applyHoverDOM]);
-
-  // Clear hover DOM state when puzzle changes
-  useEffect(() => {
-    hoverRef.current = { row: null, col: null };
-  }, [state.puzzle]);
 
   // ── Board state ref for stable drag callbacks ──
   const boardStateRef = useRef(board);
@@ -165,10 +220,16 @@ export function Board() {
     [fillCell, markX],
   );
 
-  const handleCellDown = useCallback(
-    (row: number, col: number, button: number) => {
+  // ── 事件委托：Board 层级统一处理鼠标事件 ──
+  const handleBoardMouseDown = useCallback(
+    (e: React.MouseEvent) => {
       if (wonLostRef.current.won || wonLostRef.current.lost) return;
-      const isRight = button === 2;
+      const coords = getCellCoords(e.target);
+      if (!coords) return;
+      
+      e.preventDefault();
+      const { row, col } = coords;
+      const isRight = e.button === 2;
       dragging.current = true;
       dragAction.current = determineDragAction(row, col, isRight);
       dragVisited.current = new Set([`${row},${col}`]);
@@ -177,14 +238,20 @@ export function Board() {
     [determineDragAction, applyAction],
   );
 
-  const handleCellEnter = useCallback(
-    (row: number, col: number) => {
-      setHoverDirect(row, col);
-      if (!dragging.current) return;
-      const key = `${row},${col}`;
-      if (dragVisited.current.has(key)) return;
-      dragVisited.current.add(key);
-      applyAction(row, col, dragAction.current);
+  const handleBoardMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const coords = getCellCoords(e.target);
+      if (coords) {
+        setHoverDirect(coords.row, coords.col);
+        
+        if (dragging.current) {
+          const key = `${coords.row},${coords.col}`;
+          if (!dragVisited.current.has(key)) {
+            dragVisited.current.add(key);
+            applyAction(coords.row, coords.col, dragAction.current);
+          }
+        }
+      }
     },
     [setHoverDirect, applyAction],
   );
@@ -198,14 +265,12 @@ export function Board() {
     return () => window.removeEventListener('mouseup', handleMouseUp);
   }, [handleMouseUp]);
 
+  // ── 触摸事件处理 ──
   const getCellFromTouch = useCallback(
     (touch: { clientX: number; clientY: number }): { row: number; col: number } | null => {
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
       if (!el) return null;
-      const r = el.getAttribute('data-row');
-      const c = el.getAttribute('data-col');
-      if (r == null || c == null) return null;
-      return { row: Number(r), col: Number(c) };
+      return getCellCoords(el);
     },
     [],
   );
@@ -307,6 +372,10 @@ export function Board() {
     [board, colClues],
   );
 
+  // 计算棋盘总尺寸用于 max-width/max-height 限制
+  const totalWidth = maxRowClueLen * clueCharW + cluePad + cols * cellSize;
+  const totalHeight = maxColClueLen * clueCharW + cluePad + rows * cellSize;
+
   return (
     <div ref={wrapperRef} className={styles.boardOuter}>
       <div
@@ -315,9 +384,12 @@ export function Board() {
         style={{
           gridTemplateColumns: `${maxRowClueLen * clueCharW + cluePad}px repeat(${cols}, ${cellSize}px)`,
           gridTemplateRows: `${maxColClueLen * clueCharW + cluePad}px repeat(${rows}, ${cellSize}px)`,
-          overscrollBehavior: 'contain',
+          maxWidth: totalWidth,
+          maxHeight: totalHeight,
         }}
         onContextMenu={(e) => e.preventDefault()}
+        onMouseDown={handleBoardMouseDown}
+        onMouseMove={handleBoardMouseMove}
         onMouseLeave={clearHoverDirect}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -359,8 +431,6 @@ export function Board() {
                 value={cell}
                 size={cellSize}
                 hasError={state.errorCells.has(`${r},${c}`)}
-                onCellDown={handleCellDown}
-                onCellEnter={handleCellEnter}
                 onClearError={clearError}
               />
             ))}
