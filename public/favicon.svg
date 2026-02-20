@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="4" fill="#f0ebe3"/>
+  <g fill="#4a4a4a">
+    <!-- row 1 -->
+    <rect x="4" y="4" width="5" height="5" rx="0.5"/>
+    <rect x="10" y="4" width="5" height="5" rx="0.5"/>
+    <rect x="22" y="4" width="5" height="5" rx="0.5"/>
+    <!-- row 2 -->
+    <rect x="4" y="10" width="5" height="5" rx="0.5"/>
+    <rect x="16" y="10" width="5" height="5" rx="0.5"/>
+    <rect x="22" y="10" width="5" height="5" rx="0.5"/>
+    <!-- row 3 -->
+    <rect x="4" y="16" width="5" height="5" rx="0.5"/>
+    <rect x="10" y="16" width="5" height="5" rx="0.5"/>
+    <rect x="16" y="16" width="5" height="5" rx="0.5"/>
+    <rect x="22" y="16" width="5" height="5" rx="0.5"/>
+    <!-- row 4 -->
+    <rect x="10" y="22" width="5" height="5" rx="0.5"/>
+    <rect x="16" y="22" width="5" height="5" rx="0.5"/>
+  </g>
+  <g stroke="#ccc" stroke-width="0.3" fill="none">
+    <rect x="16" y="4" width="5" height="5" rx="0.5"/>
+    <rect x="10" y="10" width="5" height="5" rx="0.5"/>
+    <rect x="4" y="22" width="5" height="5" rx="0.5"/>
+    <rect x="22" y="22" width="5" height="5" rx="0.5"/>
+  </g>
+</svg>
