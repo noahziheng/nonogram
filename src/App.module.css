@@ -89,6 +89,8 @@
 .boardWrapper {
   overflow: auto;
   max-width: 100%;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   animation: boardIn 0.4s ease-out 0.15s both;
 }
 
@@ -169,18 +171,19 @@
 
   .helpBtn,
   .themeBtn {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
   }
 
   .modeBtn {
-    padding: 7px 16px;
+    padding: 10px 16px;
     font-size: 12px;
+    min-height: 44px;
   }
 
   .hint {
-    font-size: 11px;
+    font-size: 12px;
   }
 }
 
